@@ -12,13 +12,12 @@ ScreenGui.Parent = LP:WaitForChild("PlayerGui")
 
 local Main = Instance.new("Frame")
 Main.Parent = ScreenGui
-Main.Size = UDim2.new(0, 400, 0, 400)
-Main.Position = UDim2.new(0.5, -200, 0.5, -200)
+Main.Size = UDim2.new(0,400,0,400)
+Main.Position = UDim2.new(0.5,-200,0.5,-200)
 Main.BackgroundColor3 = Color3.fromRGB(25,25,25)
 Main.BorderSizePixel = 0
-TweenService:Create(Main, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 400, 0, 400)}):Play()
+TweenService:Create(Main, TweenInfo.new(0.5,Enum.EasingStyle.Quint),{Size=UDim2.new(0,400,0,400)}):Play()
 
--- Título
 local Title = Instance.new("TextLabel")
 Title.Parent = Main
 Title.Size = UDim2.new(1,0,0,40)
@@ -27,7 +26,6 @@ Title.Text = "LEO HUB"
 Title.TextColor3 = Color3.new(1,1,1)
 Title.TextSize = 22
 
--- Botão minimizar
 local Minimize = Instance.new("TextButton")
 Minimize.Parent = Main
 Minimize.Size = UDim2.new(0,40,0,40)
@@ -35,14 +33,14 @@ Minimize.Position = UDim2.new(1,-45,0,0)
 Minimize.Text = "_"
 Minimize.TextColor3 = Color3.new(1,1,1)
 Minimize.BackgroundColor3 = Color3.fromRGB(45,45,45)
+
 local minimized = false
 Minimize.MouseButton1Click:Connect(function()
     minimized = not minimized
-    local goal = minimized and UDim2.new(0, 200, 0, 40) or UDim2.new(0,400,0,400)
-    TweenService:Create(Main, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Size = goal}):Play()
+    local goal = minimized and UDim2.new(0,200,0,40) or UDim2.new(0,400,0,400)
+    TweenService:Create(Main,TweenInfo.new(0.4,Enum.EasingStyle.Quint),{Size=goal}):Play()
 end)
 
--- Container
 local Container = Instance.new("Frame")
 Container.Parent = Main
 Container.Size = UDim2.new(1,0,1,-40)
@@ -58,8 +56,6 @@ local speedOn, sp_val = false, 100
 local jumpOn, hj_pow = false, 100
 local visualOn = false
 local fov_on, fov_rad = false, 100
-local noclip_on = false
-local ammo_on = false
 local nearest = nil
 local Humanoid, RootPart
 
@@ -91,7 +87,7 @@ local function CreateToggle(text, callback)
 end
 
 -- Slider helper
-local function CreateSlider(text, min, max, default, callback)
+local function CreateSlider(text,min,max,default,callback)
     local frame = Instance.new("Frame")
     frame.Parent = Container
     frame.Size = UDim2.new(0.9,0,0,40)
@@ -127,24 +123,17 @@ local function CreateSlider(text, min, max, default, callback)
     end)
 end
 
--- Criar toggles e sliders
-CreateToggle("Super Speed", function(s) speedOn=s end)
-CreateToggle("High Jump", function(s) jumpOn=s end)
+-- Criar toggles/sliders
 CreateToggle("Visual ESP", function(s) visualOn=s end)
 CreateToggle("Aimbot FOV", function(s) fov_on=s end)
-CreateToggle("Noclip", function(s) noclip_on=s end)
-CreateToggle("Infinite Ammo", function(s) ammo_on=s end)
 CreateToggle("Destroy UI", function() ScreenGui:Destroy() end)
-CreateSlider("Speed Power",16,200,100,function(v) sp_val=v end)
-CreateSlider("Jump Power",50,200,100,function(v) hj_pow=v end)
 CreateSlider("FOV Range",10,300,100,function(v) fov_rad=v end)
 
--- Calcula ângulo
+-- Utilidades
 local function angle(v1,v2)
     return math.deg(math.acos(math.clamp(v1:Dot(v2)/(v1.Magnitude*v2.Magnitude),-1,1)))
 end
 
--- Rainbow ESP
 local function rainbowColor(time)
     local hue = (tick()*100)%360/360
     return Color3.fromHSV(hue,1,1)
@@ -152,50 +141,7 @@ end
 
 -- Loop principal
 RS.RenderStepped:Connect(function()
-    -- Super Speed
-    if speedOn and Humanoid and RootPart then
-        local look = RootPart.CFrame.LookVector
-        local vel = Vector3.new(look.X,0,look.Z).Unit * sp_val
-        RootPart.Velocity = Vector3.new(vel.X, RootPart.Velocity.Y, vel.Z)
-    end
-
-    -- High Jump
-    if Humanoid then
-        Humanoid.JumpPower = jumpOn and hj_pow or 50
-    end
-
-    -- Noclip
-    if noclip_on and LP.Character then
-        for _, part in ipairs(LP.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
-        end
-    elseif LP.Character then
-        for _, part in ipairs(LP.Character:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = true
-            end
-        end
-    end
-
-    -- Infinite Ammo genérico
-    if ammo_on then
-        for _, tool in ipairs(LP.Backpack:GetChildren()) do
-            if tool:IsA("Tool") and tool:FindFirstChild("Ammo") then
-                tool.Ammo.Value = tool.Ammo.MaxValue.Value
-            end
-        end
-        if LP.Character then
-            for _, tool in ipairs(LP.Character:GetChildren()) do
-                if tool:IsA("Tool") and tool:FindFirstChild("Ammo") then
-                    tool.Ammo.Value = tool.Ammo.MaxValue.Value
-                end
-            end
-        end
-    end
-
-    -- ESP Rainbow
+    -- Rainbow ESP
     for _,p in ipairs(Players:GetPlayers()) do
         if p~=LP and p.Character then
             local head = p.Character:FindFirstChild("Head")
@@ -219,5 +165,38 @@ RS.RenderStepped:Connect(function()
     end
 
     -- Aimbot FOV suave
-    if fov_on then
-        local myHead = LP.Character and LP.Character:
+    if fov_on and LP.Character then
+        local myHead = LP.Character:FindFirstChild("Head")
+        if myHead then
+            local campos = Camera.CFrame.Position
+            local camlook = Camera.CFrame.LookVector
+            nearest = nil
+            local best = math.huge
+            for _,p in ipairs(Players:GetPlayers()) do
+                if p~=LP and p.Character then
+                    local head = p.Character:FindFirstChild("Head")
+                    if head then
+                        local rel = (head.Position - campos).Unit
+                        local ang = angle(camlook,rel)
+                        if ang <= fov_rad and ang < best then
+                            best = ang
+                            nearest = head
+                        end
+                    end
+                end
+            end
+            if nearest then
+                local targetPos = nearest.Position
+                local goalCFrame = CFrame.new(campos,targetPos)
+                Camera.CFrame = Camera.CFrame:Lerp(goalCFrame,0.1)
+            end
+        end
+    end
+
+    -- NoRecoil leve (simples)
+    if LP.Character and LP.Character:FindFirstChild("Humanoid") then
+        local humanoid = LP.Character.Humanoid
+        -- aplica leve força contrária ao recoil vertical
+        humanoid.CameraOffset = Vector3.new(0,0,0)
+    end
+end)
